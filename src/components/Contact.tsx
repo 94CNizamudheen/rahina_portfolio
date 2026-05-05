@@ -1,4 +1,5 @@
 import { useState, useRef, type FormEvent } from 'react';
+import emailjs from '@emailjs/browser';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface FormState {
@@ -15,6 +16,10 @@ interface FieldError {
 
 const EMAIL = 'raahinaummer@gmail.com';
 const PHONE = '+91-9497232817';
+
+const SERVICE_ID  = import.meta.env.VITE_EMAILJS_SERVICE_ID  as string;
+const TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID as string;
+const PUBLIC_KEY  = import.meta.env.VITE_EMAILJS_PUBLIC_KEY  as string;
 
 const stagger = {
   hidden: {},
@@ -63,8 +68,18 @@ function SendIcon() {
 
 function CheckIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <polyline points="20 6 9 17 4 12" />
+    </svg>
+  );
+}
+
+function AlertIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="10" />
+      <line x1="12" y1="8" x2="12" y2="12" />
+      <line x1="12" y1="16" x2="12.01" y2="16" />
     </svg>
   );
 }
@@ -158,7 +173,7 @@ function InputField({
 export default function Contact() {
   const [form, setForm] = useState<FormState>({ name: '', email: '', message: '' });
   const [errors, setErrors] = useState<FieldError>({});
-  const [status, setStatus] = useState<'idle' | 'sending' | 'sent'>('idle');
+  const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
   const formRef = useRef<HTMLFormElement>(null);
 
   const setField = (field: keyof FormState) => (value: string) => {
@@ -170,12 +185,18 @@ export default function Contact() {
     e.preventDefault();
     const errs = validateForm(form);
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
+    if (!formRef.current) return;
 
     setStatus('sending');
-    await new Promise((r) => setTimeout(r, 1500));
-    setStatus('sent');
-    setForm({ name: '', email: '', message: '' });
-    setTimeout(() => setStatus('idle'), 5000);
+    try {
+      await emailjs.sendForm(SERVICE_ID, TEMPLATE_ID, formRef.current, { publicKey: PUBLIC_KEY });
+      setStatus('sent');
+      setForm({ name: '', email: '', message: '' });
+      setTimeout(() => setStatus('idle'), 6000);
+    } catch {
+      setStatus('error');
+      setTimeout(() => setStatus('idle'), 5000);
+    }
   };
 
   return (
@@ -243,8 +264,10 @@ export default function Contact() {
                     {href ? (
                       <a
                         href={href}
-                        className="text-sm font-medium transition-colors hover:text-cyan"
+                        className="text-sm font-medium transition-colors"
                         style={{ color: '#e2e8f0' }}
+                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = '#00f5d4'; }}
+                        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = '#e2e8f0'; }}
                       >
                         {value}
                       </a>
@@ -292,7 +315,7 @@ export default function Contact() {
                 aria-label="Contact form"
               >
                 <AnimatePresence mode="wait">
-                  {status === 'sent' ? (
+                  {status === 'sent' && (
                     <motion.div
                       key="success"
                       initial={{ opacity: 0, scale: 0.95 }}
@@ -313,7 +336,39 @@ export default function Contact() {
                         I'll get back to you within 24 hours.
                       </p>
                     </motion.div>
-                  ) : (
+                  )}
+
+                  {status === 'error' && (
+                    <motion.div
+                      key="error"
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      className="flex flex-col items-center justify-center py-12 text-center"
+                    >
+                      <div
+                        className="w-14 h-14 rounded-full flex items-center justify-center mb-4"
+                        style={{ background: 'rgba(248,113,113,0.12)', color: '#f87171', border: '1px solid rgba(248,113,113,0.3)' }}
+                      >
+                        <AlertIcon />
+                      </div>
+                      <h3 className="font-display font-bold text-xl mb-2" style={{ color: '#e2e8f0' }}>
+                        Something went wrong
+                      </h3>
+                      <p className="font-mono text-sm mb-4" style={{ color: '#64748b' }}>
+                        Please try again or email me directly.
+                      </p>
+                      <a
+                        href={`mailto:${EMAIL}`}
+                        className="font-mono text-sm"
+                        style={{ color: '#00f5d4' }}
+                      >
+                        {EMAIL}
+                      </a>
+                    </motion.div>
+                  )}
+
+                  {(status === 'idle' || status === 'sending') && (
                     <motion.div key="form" className="space-y-5">
                       <InputField
                         label="// name"
