@@ -11,7 +11,7 @@ const stagger = {
 };
 
 const highlights = [
-  { label: '9+', desc: 'Years in Healthcare' },
+
   { label: '15+', desc: 'REST APIs Built' },
   { label: '2+', desc: 'Full-Stack Projects' },
   { label: '100%', desc: 'Self-Driven' },
@@ -138,7 +138,7 @@ export default function About() {
                     transform: 'translate(20%, -20%)',
                   }}
                 />
-                <div className="grid grid-cols-2 gap-6">
+                <div className="grid grid-cols-3 gap-6">
                   {highlights.map(({ label, desc }) => (
                     <div key={label} className="text-center">
                       <div
