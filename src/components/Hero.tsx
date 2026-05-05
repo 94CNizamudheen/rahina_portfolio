@@ -289,7 +289,7 @@ export default function Hero() {
           </motion.button>
 
           <motion.a
-            href="/resume.pdf"
+            href="/Rahina_Ummer_CV.pdf"
             download
             className="flex items-center gap-2 px-6 py-3 rounded-md font-semibold text-sm transition-all duration-200"
             style={{

@@ -91,7 +91,7 @@ export default function Navbar() {
         </ul>
 
         <a
-          href="/resume.pdf"
+          href="/Rahina_Ummer_CV.pdf"
           download
           className="hidden md:inline-flex items-center gap-2 font-mono text-xs px-4 py-2 rounded-md transition-all duration-200"
           style={{
